@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>AquaGuard Pro — ESP32 Bluetooth Water Controller</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#080c14">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="AquaGuard">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app-layout">
+
+  <!-- ===== HEADER ===== -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <h1>AquaGuard Pro</h1>
+        <p class="subtitle">ESP32 Bluetooth 12V Water Control System</p>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <button id="btnEmergencyStop" class="btn btn-danger" title="Stop all relays immediately">
+        🛑 <span>EMERGENCY STOP</span>
+      </button>
+      <button id="btnConnectBLE" class="btn btn-primary btn-pulse">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M7 7l10 10-5 5V2l5 5L7 17"/>
+        </svg>
+        <span>Pair ESP32</span>
+      </button>
+      <div class="status-pill-group">
+        <div class="status-pill offline" id="bleStatusPill">
+          <span class="status-dot"></span>
+          <span id="bleStatusText">Offline</span>
+        </div>
+        <div class="status-pill battery">⚡ <span id="batteryVoltage">12.6V</span></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== DASHBOARD BODY ===== -->
+  <div class="dashboard-body">
+
+    <!-- LEFT — Tank + Stats -->
+    <main class="main-panel">
+
+      <!-- Tank Visualizer -->
+      <section class="card tank-card" id="tankSection">
+        <div class="card-header">
+          <div class="header-title">
+            <span class="card-icon">💧</span>
+            <div>
+              <h2>Live Water Tank</h2>
+              <p class="card-subtitle">Real-time depth monitoring</p>
+            </div>
+          </div>
+          <div class="badge-group">
+            <span class="pill-badge cyan" id="capacityBadge">50 L Capacity</span>
+            <span class="pill-badge green" id="autoStatusBadge">AUTO ACTIVE</span>
+          </div>
+        </div>
+
+        <div class="tank-view-container">
+          <!-- Inflow Pipe (12V Refill Pump) -->
+          <div class="pipe-system inflow" id="inflowPipe">
+            <div class="pipe-stream" id="inflowStream"></div>
+            <div class="hardware-node pump">
+              <span class="node-icon">⚡</span>
+              <span class="node-title">Refill Pump</span>
+              <span class="node-status" id="pumpNodeState">OFF</span>
+            </div>
+          </div>
+
+          <!-- Tank -->
+          <div class="cylinder-tank">
+            <div class="tank-ruler">
+              <div class="ruler-mark"><span>100%</span></div>
+              <div class="ruler-mark"><span id="overflowRulerLabel">82%</span></div>
+              <div class="ruler-mark"><span id="fillRulerLabel">75%</span></div>
+              <div class="ruler-mark"><span id="drainRulerLabel">50%</span></div>
+              <div class="ruler-mark"><span>25%</span></div>
+              <div class="ruler-mark"><span>0%</span></div>
+            </div>
+
+            <div class="threshold-guide overflow-line" id="overflowLineGuide">
+              <span class="guide-tag overflow-tag">⚠ Overflow (<strong id="overflowTagVal">82%</strong>)</span>
+            </div>
+            <div class="threshold-guide fill-line" id="fillLineGuide">
+              <span class="guide-tag">Fill Cutoff (<strong id="fillTagVal">75%</strong>)</span>
+            </div>
+            <div class="threshold-guide drain-line" id="drainLineGuide">
+              <span class="guide-tag">Drain Stop (<strong id="drainTagVal">50%</strong>)</span>
+            </div>
+
+            <div class="fluid-container" id="fluidContainer" style="height:45%">
+              <div class="liquid-wave wave-front"></div>
+              <div class="liquid-wave wave-back"></div>
+            </div>
+
+            <div class="readout-overlay">
+              <div class="readout-main" id="tankPercentReadout">45%</div>
+              <div class="readout-sub" id="tankVolumeReadout">22.5 L</div>
+              <div class="readout-state" id="tankStateLabel">Normal Level</div>
+            </div>
+          </div>
+
+          <!-- Outflow Pipe (12V Release Solenoid Valve) -->
+          <div class="pipe-system outflow" id="outflowPipe">
+            <div class="pipe-stream outflow-stream" id="outflowStream"></div>
+            <div class="hardware-node">
+              <span class="node-icon">🚰</span>
+              <span class="node-title">Solenoid Valve</span>
+              <span class="node-status" id="solenoidNodeState">CLOSED</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sim Slider + Presets -->
+        <div class="sim-panel">
+          <div class="sim-header">
+            <span>Simulate Level:</span>
+            <div class="preset-buttons">
+              <button class="btn-preset" data-val="10">10%</button>
+              <button class="btn-preset" data-val="40">40%</button>
+              <button class="btn-preset" data-val="60">60%</button>
+              <button class="btn-preset" data-val="80">80%</button>
+              <button class="btn-preset" data-val="90">90%</button>
+            </div>
+          </div>
+          <input type="range" id="waterSimInput" min="0" max="100" value="45" class="custom-range">
+        </div>
+      </section>
+
+      <!-- Stats Row -->
+      <div class="stats-row" id="statsSection">
+        <div class="stat-card">
+          <div class="stat-icon">🔄</div>
+          <div class="stat-info">
+            <div class="stat-val" id="statFillCycles">0</div>
+            <div class="stat-label">Fill Cycles</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">💨</div>
+          <div class="stat-info">
+            <div class="stat-val" id="statDrainEvents">0</div>
+            <div class="stat-label">Drain Events</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">⚠️</div>
+          <div class="stat-info">
+            <div class="stat-val" id="statOverflowEvents">0</div>
+            <div class="stat-label">Overflow Alerts</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">⏱️</div>
+          <div class="stat-info">
+            <div class="stat-val" id="statUptime">00:00:00</div>
+            <div class="stat-label">Session Uptime</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Activity Log -->
+      <section class="card activity-card" id="activitySection">
+        <div class="card-header">
+          <div class="header-title">
+            <span class="card-icon">📋</span>
+            <div>
+              <h2>Activity Log</h2>
+              <p class="card-subtitle">Timestamped system event history</p>
+            </div>
+          </div>
+          <button class="btn-ghost" id="btnClearLog">Clear Log</button>
+        </div>
+        <div class="activity-log" id="activityLog">
+          <div class="activity-entry sys">
+            <span class="entry-time">00:00:00</span>
+            <span class="entry-msg">System initialized. AquaGuard Pro ready.</span>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- RIGHT — Controls Sidebar -->
+    <aside class="sidebar-panel">
+
+      <!-- Mode Card -->
+      <section class="card mode-card" id="modeSection">
+        <div class="card-header">
+          <div class="header-title">
+            <span class="card-icon">🎛️</span>
+            <div>
+              <h2>Control Mode</h2>
+              <p class="card-subtitle">System logic & override</p>
+            </div>
+          </div>
+        </div>
+        <div class="mode-selector">
+          <button class="mode-btn active" id="btnModeAuto">
+            <div class="mode-icon">🤖</div>
+            <div class="mode-info">
+              <h3>AUTOMATIC</h3>
+              <p>Sensor thresholds active</p>
+            </div>
+          </button>
+          <button class="mode-btn" id="btnModeManual">
+            <div class="mode-icon">🖐️</div>
+            <div class="mode-info">
+              <h3>MANUAL</h3>
+              <p>Direct relay control</p>
+            </div>
+          </button>
+        </div>
+        <div class="mode-notice" id="modeDescription">
+          <strong>AUTO:</strong> Diaphragm pump starts &amp; Solenoid valve opens when water level &ge; <strong id="modeDescFill">75%</strong>, releasing water until level reaches <strong id="modeDescDrain">50%</strong>.
+        </div>
+      </section>
+
+      <!-- Relay Controls -->
+      <section class="card relays-card" id="relaySection">
+        <div class="card-header">
+          <div class="header-title">
+            <span class="card-icon">⚡</span>
+            <div>
+              <h2>Relay Controls</h2>
+              <p class="card-subtitle">12V hardware loads</p>
+            </div>
+          </div>
+        </div>
+        <div class="relay-grid">
+          <div class="relay-card" id="relayBox1">
+            <div class="relay-card-top">
+              <span class="relay-badge">GPIO 26 · CH1</span>
+              <span class="relay-indicator" id="relayLed1"></span>
+            </div>
+            <div class="relay-card-body">
+              <h3>Solenoid Valve</h3>
+              <p class="relay-role">Inline Release Shut-Off Valve</p>
+              <div class="relay-status-text" id="solenoidTextStatus">CLOSED</div>
+            </div>
+            <button class="btn btn-action" id="btnToggleSolenoid" disabled>Open Valve</button>
+          </div>
+          <div class="relay-card" id="relayBox2">
+            <div class="relay-card-top">
+              <span class="relay-badge">GPIO 27 · CH2</span>
+              <span class="relay-indicator" id="relayLed2"></span>
+            </div>
+            <div class="relay-card-body">
+              <h3>Diaphragm Pump</h3>
+              <p class="relay-role">Inline Water Release Pump</p>
+              <div class="relay-status-text" id="pumpTextStatus">OFF</div>
+            </div>
+            <button class="btn btn-action" id="btnTogglePump" disabled>Start Release Pump</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== THRESHOLD SETTINGS ===== -->
+      <section class="card threshold-card" id="thresholdSection">
+        <div class="card-header">
+          <div class="header-title">
+            <span class="card-icon">⚙️</span>
+            <div>
+              <h2>Threshold Settings</h2>
+              <p class="card-subtitle">Drag slider or type a value · Auto-saved to EEPROM</p>
+            </div>
+          </div>
+          <button class="btn-ghost" id="btnApplyThresholds">Apply All</button>
+        </div>
+
+        <!-- Fill Cutoff -->
+        <div class="threshold-row">
+          <div class="threshold-row-header">
+            <div class="thresh-label-group">
+              <span class="thresh-dot cyan"></span>
+              <span class="thresh-label">Fill Cutoff — Solenoid closes when tank reaches:</span>
+            </div>
+          </div>
+          <div class="threshold-control">
+            <input type="range" id="fillStopSlider" min="40" max="95" value="75" class="custom-range range-cyan">
+            <div class="number-input-group">
+              <input type="number" id="fillStopInput" min="40" max="95" value="75" class="number-input">
+              <span class="unit-label">%</span>
+            </div>
+          </div>
+          <div class="thresh-hint">Recommended: 70–80%. Prevents overfilling.</div>
+        </div>
+
+        <!-- Drain Stop Target -->
+        <div class="threshold-row">
+          <div class="threshold-row-header">
+            <div class="thresh-label-group">
+              <span class="thresh-dot green"></span>
+              <span class="thresh-label">Drain Stop Target — Pump stops when tank drops to:</span>
+            </div>
+          </div>
+          <div class="threshold-control">
+            <input type="range" id="drainTargetSlider" min="10" max="70" value="50" class="custom-range range-green">
+            <div class="number-input-group">
+              <input type="number" id="drainTargetInput" min="10" max="70" value="50" class="number-input">
+              <span class="unit-label">%</span>
+            </div>
+          </div>
+          <div class="thresh-hint">Recommended: 40–55%. Sets the safe refill start level.</div>
+        </div>
+
+        <!-- Overflow Trigger -->
+        <div class="threshold-row">
+          <div class="threshold-row-header">
+            <div class="thresh-label-group">
+              <span class="thresh-dot amber"></span>
+              <span class="thresh-label">Overflow Trigger — Drain pump activates when level exceeds:</span>
+            </div>
+          </div>
+          <div class="threshold-control">
+            <input type="range" id="overflowSlider" min="75" max="98" value="82" class="custom-range range-amber">
+            <div class="number-input-group">
+              <input type="number" id="overflowInput" min="75" max="98" value="82" class="number-input">
+              <span class="unit-label">%</span>
+            </div>
+          </div>
+          <div class="thresh-hint">Recommended: 80–90%. Emergency overflow safety trigger.</div>
+        </div>
+
+        <!-- Tank Capacity -->
+        <div class="threshold-row">
+          <div class="threshold-row-header">
+            <div class="thresh-label-group">
+              <span class="thresh-dot blue"></span>
+              <span class="thresh-label">Tank Capacity — Physical tank size:</span>
+            </div>
+          </div>
+          <div class="threshold-control capacity-control">
+            <div class="number-input-group">
+              <input type="number" id="tankCapacityInput" min="1" max="5000" value="50" class="number-input wide-input">
+              <span class="unit-label">Liters</span>
+            </div>
+          </div>
+          <div class="thresh-hint">Used to calculate volume readout from sensor percentage.</div>
+        </div>
+      </section>
+
+      <!-- Terminal -->
+      <section class="card terminal-card" id="terminalSection">
+        <div class="card-header">
+          <div class="header-title">
+            <span class="card-icon">💻</span>
+            <div>
+              <h2>Bluetooth Console</h2>
+              <p class="card-subtitle">Live serial command feed</p>
+            </div>
+          </div>
+        </div>
+        <div class="terminal-macro-bar">
+          <button class="btn-macro" data-cmd="STATUS">STATUS</button>
+          <button class="btn-macro" data-cmd="MODE:AUTO">AUTO</button>
+          <button class="btn-macro" data-cmd="MODE:MANUAL">MANUAL</button>
+          <button class="btn-macro" data-cmd="SOLENOID:1">OPEN FILL</button>
+          <button class="btn-macro" data-cmd="SOLENOID:0">CLOSE FILL</button>
+          <button class="btn-macro" data-cmd="PUMP:1">START PUMP</button>
+          <button class="btn-macro" data-cmd="PUMP:0">STOP PUMP</button>
+          <button class="btn-macro" data-cmd="HELP">HELP</button>
+        </div>
+        <div class="terminal-box" id="terminalLog">
+          <div class="log-line sys">[SYSTEM] AquaGuard Pro initialized.</div>
+          <div class="log-line sys">[SYSTEM] Tap "Pair ESP32" to connect hardware or use simulator below.</div>
+        </div>
+        <form class="terminal-form" id="terminalForm">
+          <span class="prompt">&gt;</span>
+          <input type="text" id="terminalInput" placeholder="SETFILL:75  SETDRAIN:50  STATUS..." autocomplete="off">
+          <button type="submit" class="btn btn-send">Send</button>
+        </form>
+      </section>
+    </aside>
+  </div>
+
+  <!-- Wiring Reference -->
+  <section class="card wiring-card">
+    <div class="card-header">
+      <div class="header-title">
+        <span class="card-icon">🔌</span>
+        <div>
+          <h2>Hardware Pin Mapping</h2>
+          <p class="card-subtitle">ESP32 wiring & voltage topology</p>
+        </div>
+      </div>
+    </div>
+    <div class="wiring-grid">
+      <div class="wiring-tile">
+        <div class="tile-icon">🔋</div>
+        <div class="tile-info"><h4>12V Power Rail</h4><p>12V Battery → Buck Converter → 5V DC to ESP32 Vin & Relay VCC. Common GND required on all components.</p></div>
+      </div>
+      <div class="wiring-tile">
+        <div class="tile-icon">🚰</div>
+        <div class="tile-info"><h4>Solenoid (CH 1)</h4><p>ESP32 <strong>GPIO 26</strong> → Relay IN1. 12V(+) → Relay COM → NO → Solenoid. Install 1N4007 flyback diode.</p></div>
+      </div>
+      <div class="wiring-tile">
+        <div class="tile-icon">⚡</div>
+        <div class="tile-info"><h4>Drain Pump (CH 2)</h4><p>ESP32 <strong>GPIO 27</strong> → Relay IN2. 12V(+) → Relay COM → NO → Pump. Install flyback protection diode.</p></div>
+      </div>
+      <div class="wiring-tile">
+        <div class="tile-icon">📡</div>
+        <div class="tile-info"><h4>Depth Sensor</h4><p>Signal → ESP32 <strong>GPIO 36 (VP)</strong>. VCC → ESP32 3.3V. GND → Common Ground.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Mobile Bottom Nav -->
+  <nav class="mobile-nav">
+    <button class="nav-item active" data-target="tankSection">
+      <span class="nav-icon">💧</span><span class="nav-label">Tank</span>
+    </button>
+    <button class="nav-item" data-target="modeSection">
+      <span class="nav-icon">🎛️</span><span class="nav-label">Control</span>
+    </button>
+    <button class="nav-item" data-target="thresholdSection">
+      <span class="nav-icon">⚙️</span><span class="nav-label">Settings</span>
+    </button>
+    <button class="nav-item" data-target="activitySection">
+      <span class="nav-icon">📋</span><span class="nav-label">Log</span>
+    </button>
+    <button class="nav-item" data-target="terminalSection">
+      <span class="nav-icon">💻</span><span class="nav-label">Terminal</span>
+    </button>
+  </nav>
+
+  <footer class="app-footer">
+    <p>AquaGuard Pro &copy; 2026 · ESP32 Bluetooth BLE + PWA Mobile App</p>
+  </footer>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

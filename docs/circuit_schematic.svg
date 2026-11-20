@@ -1,0 +1,465 @@
+<svg width="1360" height="980" viewBox="0 0 1360 980" xmlns="http://www.w3.org/2000/svg" style="background-color: #0a0e17; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <defs>
+    <!-- Background Grid Pattern -->
+    <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+      <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1e293b" stroke-width="0.75" opacity="0.4" />
+    </pattern>
+
+    <!-- Component Gradients -->
+    <linearGradient id="gradBattery" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+
+    <linearGradient id="gradBuck" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#064e3b" />
+      <stop offset="100%" stop-color="#022c22" />
+    </linearGradient>
+
+    <linearGradient id="gradESP32" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e1e24" />
+      <stop offset="100%" stop-color="#111116" />
+    </linearGradient>
+
+    <linearGradient id="gradRelay" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e3a8a" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+
+    <linearGradient id="gradSensor" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0c4a6e" />
+      <stop offset="100%" stop-color="#075985" />
+    </linearGradient>
+
+    <style>
+      .wire { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+      .wire-12v { stroke: #ef4444; stroke-width: 3.5px; }
+      .wire-5v { stroke: #f97316; stroke-width: 3.5px; }
+      .wire-33v { stroke: #eab308; stroke-width: 3.5px; }
+      .wire-gnd { stroke: #64748b; stroke-width: 3.5px; }
+      .wire-sensor { stroke: #06b6d4; stroke-width: 3.5px; }
+      .wire-solenoid { stroke: #10b981; stroke-width: 3.5px; }
+      .wire-pump { stroke: #a855f7; stroke-width: 3.5px; }
+      .title-text { fill: #ffffff; font-weight: 800; font-size: 22px; letter-spacing: -0.5px; }
+      .subtitle-text { fill: #94a3b8; font-size: 13px; font-weight: 500; }
+    </style>
+  </defs>
+
+  <!-- Canvas Background & Grid -->
+  <rect width="1360" height="980" fill="#0a0e17" />
+  <rect width="1360" height="980" fill="url(#grid)" />
+
+  <!-- Schematic Banner Header -->
+  <g transform="translate(60, 30)">
+    <text x="0" y="24" class="title-text">ESP32 AUTOMATED WATER LEVEL MONITORING SYSTEM</text>
+    <text x="0" y="44" class="subtitle-text">Complete Hardware Wiring Schematic &bull; 12V Solenoid &bull; 12V Diaphragm Pump &bull; LM2596 &bull; 4-Ch Relay &bull; Analog Depth Sensor</text>
+  </g>
+
+  <!-- ========================================== -->
+  <!-- 1. WIRES & BUSES LAYER                     -->
+  <!-- ========================================== -->
+
+  <!-- ---------------- 12V POWER RAIL (RED) ---------------- -->
+  <g id="wires-12v">
+    <!-- Battery (+) to Fuse -->
+    <path class="wire wire-12v" d="M 230 140 H 260" />
+    
+    <!-- Fuse to Buck VIN+ -->
+    <path class="wire wire-12v" d="M 310 140 H 350 V 390 H 130 V 420" />
+
+    <!-- 12V Main Distribution node from (350, 140) to Relay 1 COM and Relay 2 COM -->
+    <path class="wire wire-12v" d="M 350 140 H 1050 V 380 H 1030" />
+    <circle cx="350" cy="140" r="5" fill="#ef4444" />
+
+    <!-- Relay 2 COM Tap -->
+    <path class="wire wire-12v" d="M 1050 380 V 480 H 1030" />
+    <circle cx="1050" cy="380" r="5" fill="#ef4444" />
+    <circle cx="1050" cy="480" r="5" fill="#ef4444" />
+
+    <!-- Relay 1 NO to 12V Solenoid (+) -->
+    <path class="wire wire-12v" d="M 1030 350 H 1120 V 220 H 1150" />
+
+    <!-- Relay 2 NO to 12V Diaphragm Pump (+) -->
+    <path class="wire wire-12v" d="M 1030 450 H 1110 V 510 H 1150" />
+  </g>
+
+  <!-- ---------------- 5V LOGIC POWER RAIL (ORANGE) ---------------- -->
+  <g id="wires-5v">
+    <!-- Buck VOUT+ (5V) to ESP32 Vin (5V In) -->
+    <path class="wire wire-5v" d="M 300 420 H 360 V 570 H 450 V 480 H 480" />
+
+    <!-- Tap from (360, 570) to Relay VCC at (760, 360) -->
+    <path class="wire wire-5v" d="M 360 570 V 710 H 730 V 360 H 760" />
+    <circle cx="360" cy="570" r="5" fill="#f97316" />
+  </g>
+
+  <!-- ---------------- 3.3V SENSOR POWER RAIL (GOLD) ---------------- -->
+  <g id="wires-33v">
+    <!-- ESP32 3V3 pin at (480, 440) to Water Sensor VCC at (510, 190) -->
+    <path class="wire wire-33v" d="M 480 440 H 430 V 220 H 510 V 190" />
+  </g>
+
+  <!-- ---------------- COMMON GROUND BUS (GRAY/DARK BLUE) ---------------- -->
+  <g id="wires-gnd">
+    <!-- Common Ground Bus Bar across the bottom -->
+    <rect x="70" y="795" width="1220" height="12" rx="6" fill="#334155" stroke="#64748b" stroke-width="2" />
+    <text x="680" y="805" fill="#94a3b8" font-size="11" font-weight="700" text-anchor="middle" letter-spacing="2">COMMON SYSTEM GROUND BUS (0V DC)</text>
+
+    <!-- 1. Battery (-) to GND Bus -->
+    <path class="wire wire-gnd" d="M 230 190 H 250 V 340 H 90 V 795" />
+    <circle cx="90" cy="801" r="5" fill="#94a3b8" />
+
+    <!-- 2. Buck VIN- to GND Bus -->
+    <path class="wire wire-gnd" d="M 170 420 V 510 H 130 V 795" />
+    <circle cx="130" cy="801" r="5" fill="#94a3b8" />
+
+    <!-- 3. Buck VOUT- to GND Bus -->
+    <path class="wire wire-gnd" d="M 260 420 V 540 H 210 V 795" />
+    <circle cx="210" cy="801" r="5" fill="#94a3b8" />
+
+    <!-- 4. ESP32 GND to GND Bus -->
+    <path class="wire wire-gnd" d="M 480 520 H 420 V 795" />
+    <circle cx="420" cy="801" r="5" fill="#94a3b8" />
+
+    <!-- 5. Water Sensor GND to ESP32 GND -->
+    <path class="wire wire-gnd" d="M 560 190 V 240 H 410 V 620 H 420" />
+    <circle cx="420" cy="620" r="4" fill="#94a3b8" />
+
+    <!-- 6. Relay Module GND to GND Bus -->
+    <path class="wire wire-gnd" d="M 760 400 H 710 V 795" />
+    <circle cx="710" cy="801" r="5" fill="#94a3b8" />
+
+    <!-- 7. Solenoid Valve (-) to GND Bus -->
+    <path class="wire wire-gnd" d="M 1250 220 H 1270 V 795" />
+    <circle cx="1270" cy="801" r="5" fill="#94a3b8" />
+
+    <!-- 8. Diaphragm Pump (-) to GND Bus -->
+    <path class="wire wire-gnd" d="M 1250 510 H 1270" />
+    <circle cx="1270" cy="510" r="5" fill="#94a3b8" />
+  </g>
+
+  <!-- ---------------- SIGNAL: WATER SENSOR (CYAN) ---------------- -->
+  <g id="wires-sensor">
+    <!-- Sensor SIG at (610, 190) to ESP32 GPIO 36 (VP) at (480, 560) -->
+    <path class="wire wire-sensor" d="M 610 190 V 270 H 460 V 560 H 480" />
+  </g>
+
+  <!-- ---------------- SIGNAL: SOLENOID IN1 (EMERALD GREEN) ---------------- -->
+  <g id="wires-solenoid">
+    <!-- ESP32 GPIO 26 at (680, 440) to Relay Module IN1 at (760, 440) -->
+    <path class="wire wire-solenoid" d="M 680 440 H 760" />
+  </g>
+
+  <!-- ---------------- SIGNAL: PUMP IN2 (PURPLE) ---------------- -->
+  <g id="wires-pump">
+    <!-- ESP32 GPIO 27 at (680, 480) to Relay Module IN2 at (760, 480) -->
+    <path class="wire wire-pump" d="M 680 480 H 760" />
+  </g>
+
+  <!-- ---------------- AUX RELAY SIGNALS (OPTIONAL / DASHED) ---------------- -->
+  <g id="wires-aux" opacity="0.6">
+    <path class="wire" stroke="#ec4899" stroke-width="2" stroke-dasharray="4 4" d="M 680 520 H 760" />
+    <path class="wire" stroke="#ec4899" stroke-width="2" stroke-dasharray="4 4" d="M 680 560 H 760" />
+  </g>
+
+
+  <!-- ========================================== -->
+  <!-- 2. HARDWARE COMPONENTS                     -->
+  <!-- ========================================== -->
+
+  <!-- A. 12V DC BATTERY -->
+  <g id="compBattery" transform="translate(60, 90)">
+    <rect width="170" height="130" rx="10" fill="url(#gradBattery)" stroke="#ef4444" stroke-width="2" />
+    <rect x="0" y="0" width="170" height="28" rx="8" fill="#ef4444" opacity="0.15" />
+    <text x="85" y="20" fill="#fca5a5" font-size="12" font-weight="700" text-anchor="middle">12V DC LEAD-ACID / LIPO</text>
+    
+    <rect x="25" y="45" width="120" height="50" rx="4" fill="#0f172a" stroke="#334155" stroke-width="1.5" />
+    <path d="M 50 55 V 85 M 70 62 V 78 M 90 55 V 85 M 110 62 V 78" stroke="#f87171" stroke-width="3" stroke-linecap="round" />
+
+    <circle cx="170" cy="50" r="7" fill="#ef4444" stroke="#ffffff" stroke-width="2" />
+    <text x="155" y="54" fill="#ffffff" font-size="13" font-weight="900" text-anchor="end">+</text>
+    
+    <circle cx="170" cy="100" r="7" fill="#334155" stroke="#ffffff" stroke-width="2" />
+    <text x="155" y="104" fill="#ffffff" font-size="15" font-weight="900" text-anchor="end">-</text>
+
+    <text x="85" y="118" fill="#94a3b8" font-size="11" text-anchor="middle">Main Power Source (12V)</text>
+  </g>
+
+  <!-- Inline Fuse (5A Blade Fuse) -->
+  <g id="compFuse" transform="translate(260, 120)">
+    <rect width="50" height="40" rx="6" fill="#1e293b" stroke="#eab308" stroke-width="1.5" />
+    <path d="M 5 20 Q 15 10, 25 20 T 45 20" fill="none" stroke="#eab308" stroke-width="2" />
+    <text x="25" y="32" fill="#fef08a" font-size="9" font-weight="700" text-anchor="middle">5A FUSE</text>
+  </g>
+
+  <!-- B. LM2596 BUCK CONVERTER (12V -> 5V) -->
+  <g id="compBuck" transform="translate(60, 360)">
+    <rect width="240" height="150" rx="10" fill="url(#gradBuck)" stroke="#10b981" stroke-width="2" />
+    <rect x="0" y="0" width="240" height="28" rx="8" fill="#10b981" opacity="0.2" />
+    <text x="120" y="20" fill="#a7f3d0" font-size="12" font-weight="700" text-anchor="middle">LM2596 BUCK CONVERTER</text>
+    
+    <circle cx="50" cy="80" r="16" fill="#064e3b" stroke="#34d399" stroke-width="2" />
+    <text x="50" y="84" fill="#6ee7b7" font-size="9" font-weight="700" text-anchor="middle">CAP IN</text>
+
+    <circle cx="190" cy="80" r="16" fill="#064e3b" stroke="#34d399" stroke-width="2" />
+    <text x="190" y="84" fill="#6ee7b7" font-size="9" font-weight="700" text-anchor="middle">CAP OUT</text>
+
+    <rect x="95" y="60" width="50" height="40" rx="4" fill="#0f766e" stroke="#fbbf24" stroke-width="1.5" />
+    <circle cx="120" cy="80" r="10" fill="#d97706" stroke="#fbbf24" stroke-width="1" />
+    <line x1="114" y1="80" x2="126" y2="80" stroke="#fef3c7" stroke-width="2" />
+    <text x="120" y="112" fill="#fbbf24" font-size="9" font-weight="600" text-anchor="middle">TRIMPOT (5.0V)</text>
+
+    <circle cx="70" cy="150" r="6" fill="#ef4444" stroke="#ffffff" stroke-width="1.5" />
+    <text x="70" y="142" fill="#fca5a5" font-size="10" font-weight="700" text-anchor="middle">IN+</text>
+
+    <circle cx="110" cy="150" r="6" fill="#64748b" stroke="#ffffff" stroke-width="1.5" />
+    <text x="110" y="142" fill="#cbd5e1" font-size="10" font-weight="700" text-anchor="middle">IN-</text>
+
+    <circle cx="200" cy="150" r="6" fill="#64748b" stroke="#ffffff" stroke-width="1.5" />
+    <text x="200" y="142" fill="#cbd5e1" font-size="10" font-weight="700" text-anchor="middle">OUT-</text>
+
+    <circle cx="240" cy="150" r="6" fill="#f97316" stroke="#ffffff" stroke-width="1.5" />
+    <text x="240" y="142" fill="#fdba74" font-size="10" font-weight="700" text-anchor="middle">OUT+</text>
+
+    <text x="120" y="134" fill="#a7f3d0" font-size="10" text-anchor="middle">Step Down: 12V DC ➔ 5.0V DC</text>
+  </g>
+
+  <!-- C. ESP32 DEVELOPMENT BOARD -->
+  <g id="compESP32" transform="translate(480, 310)">
+    <rect width="200" height="360" rx="12" fill="url(#gradESP32)" stroke="#38bdf8" stroke-width="2" />
+    
+    <rect x="75" y="-10" width="50" height="18" rx="3" fill="#64748b" stroke="#94a3b8" stroke-width="1.5" />
+    <text x="100" y="4" fill="#e2e8f0" font-size="8" font-weight="700" text-anchor="middle">USB</text>
+
+    <rect x="35" y="40" width="130" height="120" rx="6" fill="#334155" stroke="#64748b" stroke-width="1.5" />
+    <path d="M 50 50 H 150 V 62 H 65 V 72 H 150" fill="none" stroke="#eab308" stroke-width="2" />
+    <text x="100" y="105" fill="#f1f5f9" font-size="13" font-weight="800" text-anchor="middle" letter-spacing="1">ESP-WROOM-32</text>
+    <text x="100" y="125" fill="#38bdf8" font-size="10" font-weight="600" text-anchor="middle">Wi-Fi + Bluetooth BLE/SPP</text>
+
+    <circle cx="45" cy="185" r="7" fill="#1e293b" stroke="#e2e8f0" stroke-width="1" />
+    <text x="45" y="202" fill="#94a3b8" font-size="8" text-anchor="middle">EN</text>
+
+    <circle cx="155" cy="185" r="7" fill="#1e293b" stroke="#e2e8f0" stroke-width="1" />
+    <text x="155" y="202" fill="#94a3b8" font-size="8" text-anchor="middle">BOOT</text>
+
+    <circle cx="100" cy="185" r="5" fill="#3b82f6" />
+    <text x="100" y="202" fill="#93c5fd" font-size="8" text-anchor="middle">GPIO 2</text>
+
+    <circle cx="0" cy="130" r="5" fill="#eab308" stroke="#ffffff" stroke-width="1" />
+    <text x="12" y="134" fill="#fde047" font-size="11" font-weight="700">3V3</text>
+
+    <circle cx="0" cy="210" r="5" fill="#64748b" stroke="#ffffff" stroke-width="1" />
+    <text x="12" y="214" fill="#cbd5e1" font-size="11" font-weight="700">GND</text>
+
+    <circle cx="0" cy="250" r="5" fill="#06b6d4" stroke="#ffffff" stroke-width="1" />
+    <text x="12" y="254" fill="#67e8f9" font-size="11" font-weight="700">GPIO 36 (VP)</text>
+
+    <circle cx="0" cy="170" r="5" fill="#f97316" stroke="#ffffff" stroke-width="1" />
+    <text x="12" y="174" fill="#fdba74" font-size="11" font-weight="700">VIN (5V)</text>
+
+    <circle cx="200" cy="130" r="5" fill="#10b981" stroke="#ffffff" stroke-width="1" />
+    <text x="188" y="134" fill="#6ee7b7" font-size="11" font-weight="700" text-anchor="end">GPIO 26</text>
+
+    <circle cx="200" cy="170" r="5" fill="#a855f7" stroke="#ffffff" stroke-width="1" />
+    <text x="188" y="174" fill="#d8b4fe" font-size="11" font-weight="700" text-anchor="end">GPIO 27</text>
+
+    <circle cx="200" cy="210" r="5" fill="#ec4899" stroke="#ffffff" stroke-width="1" />
+    <text x="188" y="214" fill="#f472b6" font-size="11" font-weight="700" text-anchor="end">GPIO 14</text>
+
+    <circle cx="200" cy="250" r="5" fill="#ec4899" stroke="#ffffff" stroke-width="1" />
+    <text x="188" y="254" fill="#f472b6" font-size="11" font-weight="700" text-anchor="end">GPIO 12</text>
+
+    <text x="100" y="340" fill="#94a3b8" font-size="11" font-weight="600" text-anchor="middle">ESP32 Dev Module (30 Pin)</text>
+  </g>
+
+  <!-- D. WATER LEVEL SENSOR MODULE -->
+  <g id="compSensor" transform="translate(490, 40)">
+    <rect width="180" height="150" rx="8" fill="url(#gradSensor)" stroke="#0284c7" stroke-width="2" />
+    <rect x="0" y="0" width="180" height="26" rx="6" fill="#0284c7" opacity="0.3" />
+    <text x="90" y="18" fill="#bae6fd" font-size="11" font-weight="700" text-anchor="middle">ANALOG WATER LEVEL SENSOR</text>
+
+    <g transform="translate(30, 36)">
+      <rect width="120" height="75" fill="#082f49" rx="4" />
+      <path d="M 15 10 V 65 M 30 10 V 65 M 45 10 V 65 M 60 10 V 65 M 75 10 V 65 M 90 10 V 65 M 105 10 V 65" stroke="#f59e0b" stroke-width="3" stroke-linecap="round" />
+      <path d="M 5 45 Q 30 40 60 45 T 115 45" fill="none" stroke="#38bdf8" stroke-width="2" opacity="0.8" />
+      <text x="60" y="60" fill="#7dd3fc" font-size="9" font-weight="600" text-anchor="middle">SUBMERGED DEPTH</text>
+    </g>
+
+    <circle cx="20" cy="150" r="5" fill="#eab308" stroke="#ffffff" stroke-width="1" />
+    <text x="20" y="142" fill="#fde047" font-size="10" font-weight="700" text-anchor="middle">+ (3.3V)</text>
+
+    <circle cx="70" cy="150" r="5" fill="#64748b" stroke="#ffffff" stroke-width="1" />
+    <text x="70" y="142" fill="#cbd5e1" font-size="10" font-weight="700" text-anchor="middle">- (GND)</text>
+
+    <circle cx="120" cy="150" r="5" fill="#06b6d4" stroke="#ffffff" stroke-width="1" />
+    <text x="120" y="142" fill="#67e8f9" font-size="10" font-weight="700" text-anchor="middle">S (SIG)</text>
+  </g>
+
+  <!-- E. 4-CHANNEL 5V RELAY MODULE -->
+  <g id="compRelay" transform="translate(760, 260)">
+    <rect width="270" height="420" rx="10" fill="url(#gradRelay)" stroke="#3b82f6" stroke-width="2" />
+    <rect x="0" y="0" width="270" height="28" rx="8" fill="#1d4ed8" opacity="0.3" />
+    <text x="135" y="20" fill="#bfdbfe" font-size="12" font-weight="700" text-anchor="middle">4-CHANNEL 5V RELAY MODULE</text>
+
+    <!-- Relay 1 (Solenoid) -->
+    <g transform="translate(90, 45)">
+      <rect width="110" height="75" rx="5" fill="#1e40af" stroke="#60a5fa" stroke-width="1.5" />
+      <text x="55" y="22" fill="#ffffff" font-size="11" font-weight="800" text-anchor="middle">RELAY 1 (IN1)</text>
+      <text x="55" y="40" fill="#93c5fd" font-size="9" text-anchor="middle">10A 250VAC / 30VDC</text>
+      <text x="55" y="60" fill="#4ade80" font-size="10" font-weight="700" text-anchor="middle">SOLENOID VALVE</text>
+    </g>
+
+    <!-- Relay 2 (Pump) -->
+    <g transform="translate(90, 140)">
+      <rect width="110" height="75" rx="5" fill="#1e40af" stroke="#60a5fa" stroke-width="1.5" />
+      <text x="55" y="22" fill="#ffffff" font-size="11" font-weight="800" text-anchor="middle">RELAY 2 (IN2)</text>
+      <text x="55" y="40" fill="#93c5fd" font-size="9" text-anchor="middle">10A 250VAC / 30VDC</text>
+      <text x="55" y="60" fill="#c084fc" font-size="10" font-weight="700" text-anchor="middle">REFILL PUMP</text>
+    </g>
+
+    <!-- Relay 3 (Aux) -->
+    <g transform="translate(90, 235)">
+      <rect width="110" height="75" rx="5" fill="#1e293b" stroke="#475569" stroke-width="1.5" />
+      <text x="55" y="22" fill="#94a3b8" font-size="11" font-weight="700" text-anchor="middle">RELAY 3 (IN3)</text>
+      <text x="55" y="50" fill="#64748b" font-size="10" text-anchor="middle">Aux / Alarm Out</text>
+    </g>
+
+    <!-- Relay 4 (Aux) -->
+    <g transform="translate(90, 330)">
+      <rect width="110" height="75" rx="5" fill="#1e293b" stroke="#475569" stroke-width="1.5" />
+      <text x="55" y="22" fill="#94a3b8" font-size="11" font-weight="700" text-anchor="middle">RELAY 4 (IN4)</text>
+      <text x="55" y="50" fill="#64748b" font-size="10" text-anchor="middle">Auxiliary Out</text>
+    </g>
+
+    <!-- Left Input Header Pins -->
+    <circle cx="0" cy="100" r="5" fill="#f97316" stroke="#ffffff" stroke-width="1" />
+    <text x="8" y="104" fill="#fdba74" font-size="10" font-weight="700">VCC (5V)</text>
+
+    <circle cx="0" cy="140" r="5" fill="#64748b" stroke="#ffffff" stroke-width="1" />
+    <text x="8" y="144" fill="#cbd5e1" font-size="10" font-weight="700">GND</text>
+
+    <circle cx="0" cy="180" r="5" fill="#10b981" stroke="#ffffff" stroke-width="1" />
+    <text x="8" y="184" fill="#6ee7b7" font-size="10" font-weight="700">IN1</text>
+
+    <circle cx="0" cy="220" r="5" fill="#a855f7" stroke="#ffffff" stroke-width="1" />
+    <text x="8" y="224" fill="#d8b4fe" font-size="10" font-weight="700">IN2</text>
+
+    <circle cx="0" cy="260" r="5" fill="#ec4899" stroke="#ffffff" stroke-width="1" />
+    <text x="8" y="264" fill="#f472b6" font-size="10" font-weight="700">IN3</text>
+
+    <circle cx="0" cy="300" r="5" fill="#ec4899" stroke="#ffffff" stroke-width="1" />
+    <text x="8" y="304" fill="#f472b6" font-size="10" font-weight="700">IN4</text>
+
+    <!-- Right Output Terminals -->
+    <circle cx="270" cy="90" r="6" fill="#10b981" stroke="#ffffff" stroke-width="1.5" />
+    <text x="260" y="94" fill="#ffffff" font-size="10" font-weight="800" text-anchor="end">NO</text>
+
+    <circle cx="270" cy="120" r="6" fill="#ef4444" stroke="#ffffff" stroke-width="1.5" />
+    <text x="260" y="124" fill="#ffffff" font-size="10" font-weight="800" text-anchor="end">COM</text>
+
+    <circle cx="270" cy="190" r="6" fill="#a855f7" stroke="#ffffff" stroke-width="1.5" />
+    <text x="260" y="194" fill="#ffffff" font-size="10" font-weight="800" text-anchor="end">NO</text>
+
+    <circle cx="270" cy="220" r="6" fill="#ef4444" stroke="#ffffff" stroke-width="1.5" />
+    <text x="260" y="224" fill="#ffffff" font-size="10" font-weight="800" text-anchor="end">COM</text>
+
+    <text x="135" y="410" fill="#93c5fd" font-size="10" text-anchor="middle">Active LOW Trigger &bull; Opto-Isolated</text>
+  </g>
+
+  <!-- F. 12V SOLENOID VALVE -->
+  <g id="compSolenoid" transform="translate(1150, 160)">
+    <rect width="160" height="150" rx="10" fill="#1e293b" stroke="#10b981" stroke-width="2" />
+    <rect x="0" y="0" width="160" height="26" rx="8" fill="#10b981" opacity="0.2" />
+    <text x="80" y="18" fill="#a7f3d0" font-size="11" font-weight="700" text-anchor="middle">12V SOLENOID VALVE</text>
+    
+    <g transform="translate(25, 38)">
+      <rect x="35" y="5" width="40" height="45" rx="4" fill="#0f172a" stroke="#10b981" stroke-width="1.5" />
+      <path d="M 45 15 H 65 M 45 25 H 65 M 45 35 H 65" stroke="#f59e0b" stroke-width="2" />
+      <rect x="10" y="50" width="90" height="25" rx="3" fill="#b45309" stroke="#d97706" stroke-width="1.5" />
+      <path d="M 25 62 H 85 M 75 56 L 85 62 L 75 68" stroke="#ffffff" stroke-width="2" fill="none" />
+      <text x="55" y="90" fill="#cbd5e1" font-size="9" text-anchor="middle">Water Release / Outflow</text>
+    </g>
+
+    <circle cx="0" cy="60" r="6" fill="#10b981" stroke="#ffffff" stroke-width="1.5" />
+    <text x="12" y="64" fill="#6ee7b7" font-size="11" font-weight="800">+</text>
+
+    <circle cx="100" cy="60" r="6" fill="#64748b" stroke="#ffffff" stroke-width="1.5" />
+    <text x="90" y="64" fill="#cbd5e1" font-size="11" font-weight="800">-</text>
+
+    <!-- 1N4007 Diode -->
+    <g transform="translate(20, 115)">
+      <rect width="70" height="20" rx="3" fill="#000000" stroke="#94a3b8" stroke-width="1" />
+      <rect x="5" y="0" width="8" height="20" fill="#f8fafc" />
+      <text x="40" y="14" fill="#f1f5f9" font-size="9" font-weight="700" text-anchor="middle">1N4007</text>
+      <text x="35" y="30" fill="#fca5a5" font-size="8" text-anchor="middle">Cathode (Band) to (+)</text>
+    </g>
+  </g>
+
+  <!-- G. 12V DIAPHRAGM PUMP -->
+  <g id="compPump" transform="translate(1150, 440)">
+    <rect width="160" height="170" rx="10" fill="#1e293b" stroke="#a855f7" stroke-width="2" />
+    <rect x="0" y="0" width="160" height="26" rx="8" fill="#a855f7" opacity="0.2" />
+    <text x="80" y="18" fill="#e9d5ff" font-size="11" font-weight="700" text-anchor="middle">12V DIAPHRAGM PUMP</text>
+    
+    <g transform="translate(25, 38)">
+      <rect x="15" y="5" width="80" height="50" rx="6" fill="#0f172a" stroke="#a855f7" stroke-width="1.5" />
+      <circle cx="55" cy="30" r="16" fill="#581c87" />
+      <text x="55" y="34" fill="#ffffff" font-size="11" font-weight="900" text-anchor="middle">M</text>
+      
+      <rect x="25" y="58" width="60" height="24" rx="3" fill="#334155" stroke="#64748b" stroke-width="1.5" />
+      <path d="M 35 70 H 75 M 65 65 L 75 70 L 65 75" stroke="#38bdf8" stroke-width="2" fill="none" />
+      <text x="55" y="96" fill="#cbd5e1" font-size="9" text-anchor="middle">Tank Refill &bull; 12V DC</text>
+    </g>
+
+    <circle cx="0" cy="70" r="6" fill="#a855f7" stroke="#ffffff" stroke-width="1.5" />
+    <text x="12" y="74" fill="#d8b4fe" font-size="11" font-weight="800">+</text>
+
+    <circle cx="100" cy="70" r="6" fill="#64748b" stroke="#ffffff" stroke-width="1.5" />
+    <text x="90" y="74" fill="#cbd5e1" font-size="11" font-weight="800">-</text>
+
+    <!-- 1N5408 Diode -->
+    <g transform="translate(20, 135)">
+      <rect width="70" height="22" rx="3" fill="#000000" stroke="#94a3b8" stroke-width="1" />
+      <rect x="5" y="0" width="8" height="22" fill="#f8fafc" />
+      <text x="40" y="15" fill="#f1f5f9" font-size="9" font-weight="700" text-anchor="middle">1N5408</text>
+      <text x="35" y="31" fill="#fca5a5" font-size="8" text-anchor="middle">Cathode (Band) to (+)</text>
+    </g>
+  </g>
+
+  <!-- ========================================== -->
+  <!-- 3. SCHEMATIC LEGEND & NOTES                -->
+  <!-- ========================================== -->
+  <g transform="translate(70, 830)">
+    <rect width="1220" height="110" rx="10" fill="#0f172a" stroke="#1e293b" stroke-width="1.5" />
+    
+    <text x="20" y="24" fill="#38bdf8" font-size="12" font-weight="800" letter-spacing="1">SCHEMATIC WIRING KEY &amp; ELECTRICAL SPECIFICATIONS</text>
+    
+    <g transform="translate(20, 42)">
+      <circle cx="6" cy="6" r="6" fill="#ef4444" />
+      <text x="20" y="10" fill="#f1f5f9" font-size="11" font-weight="600">+12V High-Power Rail</text>
+      <text x="20" y="24" fill="#94a3b8" font-size="10">Battery ➔ Fuse ➔ Relays &amp; Buck</text>
+
+      <circle cx="230" cy="6" r="6" fill="#f97316" />
+      <text x="244" y="10" fill="#f1f5f9" font-size="11" font-weight="600">+5V Logic Rail</text>
+      <text x="244" y="24" fill="#94a3b8" font-size="10">Buck VOUT+ ➔ ESP32 Vin &amp; Relay VCC</text>
+
+      <circle cx="460" cy="6" r="6" fill="#eab308" />
+      <text x="474" y="10" fill="#f1f5f9" font-size="11" font-weight="600">+3.3V Sensor Rail</text>
+      <text x="474" y="24" fill="#94a3b8" font-size="10">ESP32 3V3 Pin ➔ Sensor VCC</text>
+
+      <circle cx="670" cy="6" r="6" fill="#64748b" />
+      <text x="684" y="10" fill="#f1f5f9" font-size="11" font-weight="600">Common Ground Bus</text>
+      <text x="684" y="24" fill="#94a3b8" font-size="10">0V DC Reference for ALL modules</text>
+
+      <circle cx="890" cy="6" r="6" fill="#10b981" />
+      <text x="904" y="10" fill="#f1f5f9" font-size="11" font-weight="600">GPIO Trigger &amp; Analog ADC</text>
+      <text x="904" y="24" fill="#94a3b8" font-size="10">GPIO 36 (ADC), GPIO 26/27 (Active LOW)</text>
+    </g>
+
+    <g transform="translate(20, 80)">
+      <rect width="1180" height="22" rx="4" fill="rgba(239, 68, 68, 0.15)" stroke="rgba(239, 68, 68, 0.3)" />
+      <text x="12" y="15" fill="#f87171" font-size="10" font-weight="700">⚠️ CRITICAL SAFETY RULES:</text>
+      <text x="180" y="15" fill="#cbd5e1" font-size="10">1. Adjust LM2596 buck converter to EXACTLY 5.0V BEFORE connecting ESP32 &bull; 2. Solder flyback diodes (1N4007) across Solenoid and Pump &bull; 3. Keep all grounds unified.</text>
+    </g>
+  </g>
+</svg>
