@@ -32,9 +32,9 @@ portMUX_TYPE bleMux = portMUX_INITIALIZER_UNLOCKED;
 
 #line 31 "C:\\Users\\Jem\\.gemini\\antigravity-ide\\scratch\\esp32-water-level-monitor\\firmware\\water_level_monitor\\water_level_monitor.ino"
 void bleSendString(const String& msg);
-#line 115 "C:\\Users\\Jem\\.gemini\\antigravity-ide\\scratch\\esp32-water-level-monitor\\firmware\\water_level_monitor\\water_level_monitor.ino"
+#line 116 "C:\\Users\\Jem\\.gemini\\antigravity-ide\\scratch\\esp32-water-level-monitor\\firmware\\water_level_monitor\\water_level_monitor.ino"
 void setup();
-#line 182 "C:\\Users\\Jem\\.gemini\\antigravity-ide\\scratch\\esp32-water-level-monitor\\firmware\\water_level_monitor\\water_level_monitor.ino"
+#line 183 "C:\\Users\\Jem\\.gemini\\antigravity-ide\\scratch\\esp32-water-level-monitor\\firmware\\water_level_monitor\\water_level_monitor.ino"
 void loop();
 #line 31 "C:\\Users\\Jem\\.gemini\\antigravity-ide\\scratch\\esp32-water-level-monitor\\firmware\\water_level_monitor\\water_level_monitor.ino"
 void bleSendString(const String& msg) {
@@ -101,6 +101,7 @@ bool isAutoMode = true;             // true = Automatic Control, false = Manual 
 bool solenoidValveState = false;    // Solenoid Valve (Relay Channel 1: Inline Release Valve)
 bool diaphragmPumpState = false;    // Diaphragm Pump (Relay Channel 2: Inline Water Release Pump)
 bool isDrainingActive = false;      // Drain/Release state latch flag
+int highLevelConfirmCount = 0;      // Debounce counter to prevent false dry-run triggers
 
 // Timing Variables
 unsigned long lastControlTime = 0;
@@ -262,28 +263,43 @@ int calculatePercentage(int rawAdc) {
 void processAutomatedControl() {
   // --- COMBINED WATER RELEASE CONTROL (Pump + Solenoid Valve) ---
   // The pump is connected inline to the solenoid valve:
-  // The pump pushes water and the solenoid valve opens to release it.
+  // Solenoid MUST always be OPEN when the pump is draining water.
+  // Never run the pump if water level is at/below drain target or dry (<= 5%).
 
-  // 1. Trigger Release if water level reaches or exceeds trigger threshold (Default >=75%)
-  if (currentWaterLevelPercent >= fillStopThreshold) {
-    if (!isDrainingActive) {
-      isDrainingActive = true;
-      diaphragmPumpState = true;  // Pump pushes water
-      solenoidValveState = true;  // Solenoid valve opens to release water
-      Serial.println(F("[AUTO] High water level detected! Solenoid Valve OPENED & Pump STARTED (Releasing water)."));
-    }
+  if (currentWaterLevelPercent <= 5) {
+    // Dry / no-water safety cutoff
+    highLevelConfirmCount = 0;
+    isDrainingActive = false;
+    diaphragmPumpState = false;
+    solenoidValveState = false;
+    return;
   }
 
-  // 2. Keep Pump RUNNING & Solenoid OPEN until level drops down to target threshold (Default <=50%)
+  // 1. Trigger Release only after 3 consecutive readings >= fillStopThreshold (prevents noise spikes)
+  if (currentWaterLevelPercent >= fillStopThreshold) {
+    if (highLevelConfirmCount < 3) {
+      highLevelConfirmCount++;
+    }
+    if (highLevelConfirmCount >= 3 && !isDrainingActive) {
+      isDrainingActive = true;
+      solenoidValveState = true;  // Open solenoid valve first
+      diaphragmPumpState = true;  // Pump pushes water out
+      Serial.println(F("[AUTO] High water level confirmed! Solenoid Valve OPENED & Pump STARTED."));
+    }
+  } else {
+    highLevelConfirmCount = 0;
+  }
+
+  // 2. Keep Solenoid OPEN & Pump RUNNING until level drops to target threshold (Default <=50%)
   if (isDrainingActive) {
     if (currentWaterLevelPercent <= drainTargetThreshold) {
       isDrainingActive = false;
       diaphragmPumpState = false; // Stop pump
-      solenoidValveState = false; // Close solenoid valve (positive seal, no siphoning)
+      solenoidValveState = false; // Close solenoid valve
       Serial.println(F("[AUTO] Target safe level reached. Pump STOPPED & Solenoid Valve CLOSED."));
     } else {
-      diaphragmPumpState = true;
       solenoidValveState = true;
+      diaphragmPumpState = true;
     }
   } else {
     // When idle and level is normal, ensure both stay safely OFF
@@ -296,6 +312,10 @@ void processAutomatedControl() {
 // RELAY OUTPUT HARDWARE DRIVER
 // ==========================================
 void applyRelayStates() {
+  // Safety interlock: solenoid MUST be open whenever pump is running
+  if (diaphragmPumpState && !solenoidValveState) {
+    solenoidValveState = true;
+  }
   digitalWrite(PIN_RELAY_SOLENOID, solenoidValveState ? SOLENOID_ON : SOLENOID_OFF);
   digitalWrite(PIN_RELAY_PUMP, diaphragmPumpState ? PUMP_ON : PUMP_OFF);
 }

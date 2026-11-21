@@ -28,8 +28,8 @@
 #define PIN_WATER_SENSOR    36   // Analog Pin VP (ADC1_CH0) for depth sensor
 
 // Relay Output Channels (4-Channel Relay)
-#define PIN_RELAY_SOLENOID  26   // Channel 1: 12V Solenoid Valve (Inline Release Shut-Off Valve)
-#define PIN_RELAY_PUMP      27   // Channel 2: 12V Diaphragm Pump (Inline Water Release Pump)
+#define PIN_RELAY_PUMP      26   // Channel 1: 12V Diaphragm Pump (Inline Water Release Pump)
+#define PIN_RELAY_SOLENOID  27   // Channel 2: 12V Solenoid Valve (Inline Release Shut-Off Valve)
 #define PIN_RELAY_AUX1      14   // Channel 3: Auxiliary / Alarm Relay
 #define PIN_RELAY_AUX2      12   // Channel 4: Auxiliary Output
 
